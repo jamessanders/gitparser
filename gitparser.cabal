@@ -1,0 +1,17 @@
+name:                gitparser
+version:             0.1
+synopsis:            parse data from git logs
+description:         parse data from git logs
+category:            Data
+license:             BSD3
+license-file:        LICENSE
+author:              James Sanders
+maintainer:          jimmyjazz14@gmail.com
+build-depends:       base
+build-type:          Simple
+Cabal-Version:       >= 1.2
+Library
+     ghc-options:         -O2 
+     hs-source-dirs: src
+     Build-Depends:     base >= 3, old-locale >= 1.0.0.2, time >= 1.1.4, mtl >= 1.1.0.2
+     Exposed-modules:   Data.GitParser

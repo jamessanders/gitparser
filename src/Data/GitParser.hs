@@ -1,3 +1,8 @@
+module Data.GitParser 
+    (GitCommit (..)
+    ,GitField (..)
+    ,parseCommits)
+where
 import Control.Monad.State
 import Data.Char
 import Data.List
