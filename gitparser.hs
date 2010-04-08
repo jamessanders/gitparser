@@ -1,9 +1,21 @@
 import Control.Monad.State
-import Data.List
 import Data.Char
+import Data.List
+import Data.Time.Format 
+import Data.Time.LocalTime
+import System.Locale 
 
 data GitField = SHA String | Author String | Date String | Message String 
               deriving Show
+
+data CommitAuthor = CommitAuthor { getName :: String, getEmail :: String } deriving (Show,Read)
+
+data GitCommit = GitCommit { getSHA     :: String
+                           , getAuthor  :: CommitAuthor
+                           , getDate    :: Maybe LocalTime
+                           , getMessage :: String } deriving (Show,Read)
+
+emptyCommit = GitCommit "" (CommitAuthor "Unknown" "Unknown")  Nothing ""
 
 data ParserState = PS { psLeft   :: [String]
                       , psRight  :: [String]
@@ -43,11 +55,11 @@ parseCommit = do nl <- getRight
                    else do getNextLine >>= findNext 
                            parseCommit
     where
-      findNext x | "commit"  `isInfixOf` x = parseSHA 
-                 | "Merge:"  `isInfixOf` x = parseMerge
-                 | "Author:" `isInfixOf` x = parseAuthor
-                 | "Date:"   `isInfixOf` x = parseDate
-                 | "    "    `isInfixOf` x = parseMessage
+      findNext x | "commit"  `isPrefixOf` x = parseSHA 
+                 | "Merge:"  `isPrefixOf` x = parseMerge
+                 | "Author:" `isPrefixOf` x = parseAuthor
+                 | "Date:"   `isPrefixOf` x = parseDate
+                 | "    "    `isPrefixOf` x = parseMessage
       findNext x = shift >> clear
                 
 parseSHA = do r <- getNextLine
@@ -67,9 +79,31 @@ parseDate    = colonBlock Date
 
 parseMessage = do r <- getNextLine
                   l <- getLeft
-                  if "    " `isInfixOf` r
+                  if "    " `isPrefixOf` r
                     then shift >> parseMessage
                     else putBlock (Message $ unlines . map (drop 4) $ l) >> clear
 
 strip = reverse . fn . reverse . fn
         where fn = dropWhile isSpace
+
+
+splitCommits l = filter (not . null) $  splitCommits (lines l) [] []
+               where
+                 splitCommits [] ls final = final ++ [unlines ls]
+                 splitCommits (x:xs) ls final = if "commit" `isPrefixOf` x
+                                                  then splitCommits xs [x] (final ++ [unlines ls])
+                                                  else splitCommits xs (ls ++ [x]) final
+
+
+toCommit = foldl af emptyCommit
+    where af c (SHA a)     = c { getSHA     = a }
+          af c (Author a)  = c { getAuthor  = toAuthor a }
+          af c (Date a)    = c { getDate    = toLocalTime a }
+          af c (Message a) = c { getMessage = a }
+
+toLocalTime = parseTime defaultTimeLocale "%a %b %e %H:%M:%S %Y %z" 
+toAuthor x = let name = strip . takeWhile (/= '<') $ x
+                 emal = tail . takeWhile (/= '>') . dropWhile (/= '<') $ x
+             in CommitAuthor name emal
+
+parseCommits = map (toCommit . psBlocks . execState parseCommit . mkParserState) . splitCommits
