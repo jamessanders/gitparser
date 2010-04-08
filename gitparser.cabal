@@ -14,4 +14,6 @@ Library
      ghc-options:         -O2 
      hs-source-dirs: src
      Build-Depends:     base >= 3, old-locale >= 1.0.0.2, time >= 1.1.4, mtl >= 1.1.0.2
+                        , bytestring >= 0.9.1.5, directory >= 1.0.1.0, filepath >= 1.1.0.3
      Exposed-modules:   Data.GitParser
+     Other-modules: Data.GitParser.Types, Data.GitParser.Parser, Data.GitParser.Repo
