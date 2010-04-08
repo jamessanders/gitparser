@@ -8,7 +8,7 @@ import System.Locale
 data GitField = SHA String | Author String | Date String | Message String 
               deriving Show
 
-data CommitAuthor = CommitAuthor { getName :: String, getEmail :: String } deriving (Show,Read)
+data CommitAuthor = CommitAuthor { getName :: String, getEmail :: String } deriving (Show,Read,Eq,Ord)
 
 data GitCommit = GitCommit { getSHA     :: String
                            , getAuthor  :: CommitAuthor
